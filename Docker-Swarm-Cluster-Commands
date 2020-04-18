@@ -1,0 +1,49 @@
+## Docker Swarm Commands and uses to create Cluster, Services, 
+
+Docker SWARM works with RAFT Algorithm. Random timer is getting assigned to all the Master Nodes in the cluster and through this they exchange their information and keep upto date about all the information required to perform.
+
+Docker Swarm always manitain the Cluster in Quorum i.e. if there are 3 master Node in the Cluster then at least 2 Master Node should be Online and need to be in workable condition. the formula of the Quorum is Qurom of "N" = "N" + 1 /2 (where "N" is the number of Cluster and the convention is Cluster number should be in odd ones like 3,5,7 etc. and there can be "N" number of Master nodes in a cluster.)
+
+Note:- Now, if there are 3 master nodes and 2 of the Master Nodes are down the cluster will be invalid but still the worker nodes will perform their normal operation. However, one cannot add more nodes in the cluster or, can't able to update the service in any of the worker nodes.
+
+To create a Swarm Cluster we need to install docker swarm and the installation setup is available for all windows, linux and mac-OS
+
+Once the docker swarm setup is finished and the machines are ready for the cluster. Follow the below commands,
+
+# docker swarm init --advertise-addr <IP-Address-Of-the-Node>  // 1st we need to initialize the cluster.
+
+# docker node ls // to see the nodes present in the cluster
+
+# docker swarm join --token <token-id>  // We need to give this command in one of the worker node to join the node as worker in the cluster. This command will be provided when we initialize the cluster on Leader Master Node and from there we will get the token-id
+
+# docker swarm leave // this command we need to provide from any worker or, master node to detach the swarm cluster
+
+# docker node rm <docker-hostname> // to erase the node info from the list of the swarm cluter
+
+# docker swarm join-token manager // this command we need to provide on the leader master node i.e. the only master node available in the cluster to get the token-id for other Master node for this cluster.
+
+# docker swarm join --token <token-id> // this command need to be executed in another master node to make the node as a master in the swarm cluster.
+
+# docker node promote <docker-hostname> // we need to execute this command when we can't see the Master host machine not displayed as "reachable" in Manager Status in Swarm Cluster status.
+
+# docker swarm init --force-new-cluster --advertise-addr <IP-Of-The-Leader-Master-Node> // this command need to executed only when it is impossible to bring back the other Master Node in the cluster.
+
+# docker service create nginx // to create nginx service in swarm cluster. This command need to be executed from the master node.
+
+# docker service ls // to list the services in the cluster.
+
+# docker service ps <ps-id> // to list the task for the service.
+
+# docker ps // to see the running container in the swarm clsuter
+
+# docker service <options> --help // to get help for the specific option commands
+
+# docker service update <task-id> --publish-add 5000:80 // here we need to map the port with the task of the service by publishing port mapping.
+
+# docker service rm <task-id> // Remove the task from the cluster. To see the task-id provide docker service ls or, docker service ps
+
+# docker service create --replicas 2 --name nginx nginx
+
+# docker node update --availability drain <docker-master-host-name>  // if we want to drain the services from any master node we can do with the following command. The service which was runnning in the particular Master-Node will get shifted to the other worker nodes.
+
+# 
