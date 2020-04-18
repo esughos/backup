@@ -1,0 +1,584 @@
+https://github.com/esughos/openshift.git  (My github repository for Openshift play)
+
+## or create a new repository on the command line
+echo "# openshift" >> README.md  // first create your file which you want to add in your hithub
+git init   // initialize the Github repo
+git add README.md  // this is the way to add a file in github
+git commit -m "first commit"    // commit the file locally with some commit name
+git config --global user.username esughos // esughos is the username
+git remote add origin https://github.com/esughos/openshift.git  // then add the github branch with a name
+git push -u origin (github repository URL) // then push the file in the Github master branch (branch name)
+
+## or push an existing repository from the command line
+git remote add origin https://github.com/esughos/openshift.git
+git push -u origin master
+
+## In openshift there is a concept of image stream and the logic behind this functionlity whenever we have images in any of our repositories there is a chance that those images can be updated and due to that the running application might be affected hence to mitigate this issue in openshift this image stream will not only locate the image in the repository but they point to the image-id in the repositroy which is always unique for a image file and hence there is a no chance to update the particular image.
+
+## In Openshift there is a concept of Source2Image i.e. whenever you want to build a particular application you just mention the source code repository like github/gitlab/perforce/SCM it will build the application from the docker file and convert it into a docker image and then push the image into it's own repository. Other than this it is also possible to build image in a magic way just specify your source code only in git repo and openshift will build an application image from the source code (it will open your source code and see what are the things mentioned in the code then it'll create a docker file based on that and form a application docker image) and pushed it into openshift container registry. Beside these we can manually build a docker file in openshift by editing the yaml file for a particular application.
+
+## In openshift every pod which is deployed in different worker and master node need to communicate with each other hence to have a communication within the pods SDN (Software/Service Defined Network) which is also called Overlay Network. The Overlay Network use Open VSwitch which have "VLAN tagging", "Trunking", "LACP", "Port Mirroring".
+
+However, the Overlay Network should have an IP pool like 10.128.0.0/14 and if there are 3 Pods then all the 3 Pods should have subnet pool from the Overlay Network pool like 1st Pod subnet should have 10.128.0.0/23, 2nd Pod subnet should have 10.128.2.0/23 and 3rd Pod subnet should have 10.128.4.0/23. Now, 1st Pod should receive an IP from the 1st Pod subnet pool and likewise for others.
+
+Now each Pod should communicate with another Pod by it's name so openshift uses SkyDNS as a DNS service to resolve hostname into Ip-Address as Pod should not directly communicate with IP-Address as the process is not secure if the Pod restarted then the IP-Address of the Pod get change and hence outage may happen.
+
+Each project in openshift within each other communicate with OVS Multitenant with a unique virtual IP and that can be configured through service.
+
+Now to communicate to the external world service works with route to expose application to external users. Now, route can be attched with "LoadBalancer" to serve this purpose. There are three load balancer present "Source" which has a direct relationship with the "Pod" and the "External users" i.e. it acts as a sticky session, "RoundRobin" routes traffic randomly based on the load of the host and "leastconn" routes towards endpoints with lowest number of connections.
+
+
+############# Openshift CLI commands ####################
+
+#  oc login https://c100-e.us-east.containers.cloud.ibm.com:30528 --token=nakp-INcSs6C5vBcGnG6wBZYjy-CSl3MXCUV_tWAbw0 // to login into openshift cluster, token is the session-password.
+
+Logged into "https://c100-e.us-east.containers.cloud.ibm.com:30528" as "IAM#sumang12@in.ibm.com" using the token provided.
+
+You have access to the following projects and can switch between them with 'oc project <projectname>':
+
+    devops
+    estore
+    ref-impl-1-1
+    ref-impl-1-2
+    ref-impl-2-1
+    ref-impl-2-2
+    ref-impl-2-3
+    ref-impl-3-1
+    ref-impl-5-1
+    ref-impl-6-1
+  * sumang12-in
+
+Using project "sumang12-in".
+
+# oc new-project demo // demo is the name of the project
+
+# oc project <project-name> // command to switch between project
+
+# oc logs -f bc/openshifttest  // here openshifttest is the deployment name
+
+Cloning "https://github.com/esughos/openshift_test.git" ...
+        Commit: 6569131f7edc36c5d1948018f47ed27642d5d995 (Update app.py)
+        Author: esughos <30291416+esughos@users.noreply.github.com>
+        Date:   Thu Apr 16 15:09:59 2020 +0530
+Using docker-registry.default.svc:5000/openshift/python@sha256:3a3a3331ae28b4748a0a48f3c6313c7ad355e17b71087df347196200e2e23cc1 as the s2i builder image
+---> Installing application source ...
+---> Installing dependencies ...
+Collecting flask (from -r requirements.txt (line 1))
+Downloading https://files.pythonhosted.org/packages/f2/28/2a03252dfb9ebf377f40fba6a7841b47083260bf8bd8e737b0c6952df83f/Flask-1.1.2-py2.py3-none-any.whl (94kB)
+Collecting click>=5.1 (from flask->-r requirements.txt (line 1))
+Downloading https://files.pythonhosted.org/packages/dd/c0/4d8f43a9b16e289f36478422031b8a63b54b6ac3b1ba605d602f10dd54d6/click-7.1.1-py2.py3-none-any.whl (82kB)
+Collecting Werkzeug>=0.15 (from flask->-r requirements.txt (line 1))
+Downloading https://files.pythonhosted.org/packages/cc/94/5f7079a0e00bd6863ef8f1da638721e9da21e5bacee597595b318f71d62e/Werkzeug-1.0.1-py2.py3-none-any.whl (298kB)
+Collecting itsdangerous>=0.24 (from flask->-r requirements.txt (line 1))
+Downloading https://files.pythonhosted.org/packages/76/ae/44b03b253d6fade317f32c24d100b3b35c2239807046a4c953c7b89fa49e/itsdangerous-1.1.0-py2.py3-none-any.whl
+Collecting Jinja2>=2.10.1 (from flask->-r requirements.txt (line 1))
+Downloading https://files.pythonhosted.org/packages/30/9e/f663a2aa66a09d838042ae1a2c5659828bb9b41ea3a6efa20a20fd92b121/Jinja2-2.11.2-py2.py3-none-any.whl (125kB)
+Collecting MarkupSafe>=0.23 (from Jinja2>=2.10.1->flask->-r requirements.txt (line 1))
+Downloading https://files.pythonhosted.org/packages/b2/5f/23e0023be6bb885d00ffbefad2942bc51a620328ee910f64abe5a8d18dd1/MarkupSafe-1.1.1-cp36-cp36m-manylinux1_x86_64.whl
+Installing collected packages: click, Werkzeug, itsdangerous, MarkupSafe, Jinja2, flask
+Successfully installed Jinja2-2.11.2 MarkupSafe-1.1.1 Werkzeug-1.0.1 click-7.1.1 flask-1.1.2 itsdangerous-1.1.0
+You are using pip version 9.0.1, however version 20.0.2 is available.
+You should consider upgrading via the 'pip install --upgrade pip' command.
+
+Pushing image docker-registry.default.svc:5000/sumang12-in/openshifttest:latest ...
+Pushed 0/6 layers, 17% complete
+Pushed 1/6 layers, 17% complete
+Push successful
+
+
+#  oc get routes    // to get the routes of the application already deployed. "Termination" edge means already the route has been securely exposed to https
+
+NAME                 HOST/PORT                                                                                                                         PATH      SERVICES             PORT       TERMINATION   WILDCARD
+django-app           django-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                     django-app           8080-tcp                 None
+django-ex            django-ex-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                      django-ex            8080-tcp   edge          None
+fluskapp             fluskapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                       fluskapp             8080-tcp                 None
+go-app               go-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                         go-app               8080-tcp                 None
+my-web-app           my-web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                     my-web-app           8080-tcp                 None
+mywebapp             mywebapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                       mywebapp             8080-tcp                 None
+openshifttest        openshifttest-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                  openshifttest        8080-tcp   edge          None
+own-app              own-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                        own-app              8080-tcp   edge          None
+py-web-app           py-web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                     py-web-app           8080-tcp                 None
+pyapp                pyapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                          pyapp                8080-tcp                 None
+python-hello-world   python-hello-world-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud             python-hello-world   8080-tcp                 None
+python-web-app       python-web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                 python-web-app       8080-tcp                 None
+suman-app            suman-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                      suman-app            8080-tcp   edge          None
+web-app              web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                        web-app              8080-tcp                 None
+webapp               webapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                         webapp               8080-tcp                 None
+webapptest           webapptest-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                     webapptest           8080-tcp                 None
+
+
+#  oc new-app https://github.com/esughos/openshift_test.git  // creating a new appliation in the openshift cluster by specifing the git repository location
+
+--> Found image 3d6fd35 (4 weeks old) in image stream "openshift/python" under tag "3.6" for "python"
+
+    Python 3.6
+    ----------
+    Python 3.6 available as container is a base platform for building and running various Python 3.6 applications and frameworks. Python is an easy to learn, powerful programming language. It has efficient high-level data structures and a simple but effective approach to object-oriented programming. Python's elegant syntax and dynamic typing, together with its interpreted nature, make it an ideal language for scripting and rapid application development in many areas on most platforms.
+
+    Tags: builder, python, python36, python-36, rh-python36
+
+    * The source repository appears to match: python
+    * A source build using source code from https://github.com/esughos/openshift_test.git will be created
+      * The resulting image will be pushed to image stream tag "openshifttest:latest"
+      * Use 'start-build' to trigger a new build
+    * This image will be deployed in deployment config "openshifttest"
+    * Port 8080/tcp will be load balanced by service "openshifttest"
+      * Other containers can access this service through the hostname "openshifttest"
+
+--> Creating resources ...
+    imagestream.image.openshift.io "openshifttest" created
+    buildconfig.build.openshift.io "openshifttest" created
+    deploymentconfig.apps.openshift.io "openshifttest" created
+    service "openshifttest" created
+--> Success
+    Build scheduled, use 'oc logs -f bc/openshifttest' to track its progress.
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose svc/openshifttest'
+    Run 'oc status' to view your app.
+
+# oc status // command to view the application status
+
+In project sumang12-in on server https://c100-e.us-east.containers.cloud.ibm.com:30528
+
+http://django-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/django-app)
+
+https://django-ex-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/django-ex)
+  dc/django-ex deploys istag/django-ex:latest <-
+    bc/django-ex source builds https://github.com/openshift/django-ex.git#master on openshift/python:3.6
+    deployment #2 deployed 38 hours ago - 3 pods
+    deployment #1 deployed 39 hours ago
+
+svc/go-app - 172.21.121.208:8080
+  dc/go-app deploys istag/go-app:latest <-
+    bc/go-app docker builds https://github.com/esughos/openshift.git on istag/ubuntu:16.04
+      build #1 failed 4 minutes ago - a6e9d2d: Update dockerfile (esughos <30291416+esughos@users.noreply.github.com>)
+    deployment #1 waiting on image or update
+
+svc/go-app1 - 172.21.170.119:8080
+  dc/go-app1 deploys istag/go-app1:latest <-
+    bc/go-app1 docker builds https://github.com/esughos/openshift.git on istag/ubuntu:16.04
+      build #1 failed 10 seconds ago - d096cc4: Update dockerfile (esughos <30291416+esughos@users.noreply.github.com>)
+    deployment #1 waiting on image or update
+
+http://my-web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/my-web-app)
+  dc/my-web-app deploys istag/my-web-app:latest <-
+    bc/my-web-app source builds https://github.com/esughos/openshift.git#master on openshift/python:3.6
+    deployment #1 failed 13 hours ago: config change
+
+http://mywebapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/mywebapp)
+
+http://pyapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/pyapp)
+
+http://webapptest-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/webapptest)
+
+Errors:
+  * bc/my-web-app is pushing to istag/my-web-app:latest, but the image stream for that tag does not exist.
+  * build/go-app-1 has failed.
+  * build/go-app1-1 has failed.
+  * The image trigger for dc/my-web-app will have no effect because is/my-web-app does not exist.
+
+4 errors, 8 warnings, 7 infos identified, use 'oc status --suggest' to see details.
+
+
+# oc expose svc/openshifttest  // to expose secure route to the application i.e transform url from http to https.
+
+#  oc get is -n openshift   // here "is" is the image stream and the command is to view the pre installed images stored in openshift cluster
+
+NAME                                           DOCKER REPO                                                                               TAGS                           UPDATED
+amp-apicast                                    docker-registry.default.svc:5000/openshift/amp-apicast                                    2.6
+amp-backend                                    docker-registry.default.svc:5000/openshift/amp-backend                                    2.6
+amp-system                                     docker-registry.default.svc:5000/openshift/amp-system                                     2.6
+amp-zync                                       docker-registry.default.svc:5000/openshift/amp-zync                                       2.6
+amq-streams-kafka-22                           docker-registry.default.svc:5000/openshift/amq-streams-kafka-22                           latest                         4 weeks ago
+backend-redis                                  docker-registry.default.svc:5000/openshift/backend-redis                                  2.6,latest                     3 weeks ago
+base-centos7                                   docker-registry.default.svc:5000/openshift/base-centos7                                   latest                         4 weeks ago
+deploy-containers-apb                          docker-registry.default.svc:5000/openshift/deploy-containers-apb
+dotnet                                         docker-registry.default.svc:5000/openshift/dotnet                                         2.1,latest,1.0 + 2 more...     3 weeks ago
+dotnet-runtime                                 docker-registry.default.svc:5000/openshift/dotnet-runtime                                 2.0,2.1,latest                 3 weeks ago
+eap-cd-openshift                               docker-registry.default.svc:5000/openshift/eap-cd-openshift                               13,13.0,latest + 2 more...     3 weeks ago
+fis-java-openshift                             docker-registry.default.svc:5000/openshift/fis-java-openshift                             1.0,2.0                        3 weeks ago
+fis-karaf-openshift                            docker-registry.default.svc:5000/openshift/fis-karaf-openshift                            1.0,2.0                        3 weeks ago
+fuse7-console                                  docker-registry.default.svc:5000/openshift/fuse7-console                                  1.1,1.0                        3 weeks ago
+fuse7-eap-openshift                            docker-registry.default.svc:5000/openshift/fuse7-eap-openshift                            1.0,1.1                        3 weeks ago
+fuse7-java-openshift                           docker-registry.default.svc:5000/openshift/fuse7-java-openshift                           1.0,1.1                        3 weeks ago
+fuse7-karaf-openshift                          docker-registry.default.svc:5000/openshift/fuse7-karaf-openshift                          1.1,1.0                        3 weeks ago
+httpd                                          docker-registry.default.svc:5000/openshift/httpd                                          2.4,latest                     3 weeks ago
+java                                           docker-registry.default.svc:5000/openshift/java                                           8,latest                       3 weeks ago
+jboss-amq-62                                   docker-registry.default.svc:5000/openshift/jboss-amq-62                                   1.4,1.5,1.6 + 4 more...        3 weeks ago
+jboss-amq-63                                   docker-registry.default.svc:5000/openshift/jboss-amq-63                                   1.2,1.3,1.0 + 1 more...        3 weeks ago
+jboss-datagrid65-client-openshift              docker-registry.default.svc:5000/openshift/jboss-datagrid65-client-openshift              1.0,1.1                        3 weeks ago
+jboss-datagrid65-openshift                     docker-registry.default.svc:5000/openshift/jboss-datagrid65-openshift                     1.2,1.3,1.4 + 2 more...        3 weeks ago
+jboss-datagrid71-client-openshift              docker-registry.default.svc:5000/openshift/jboss-datagrid71-client-openshift              1.0                            3 weeks ago
+jboss-datagrid71-openshift                     docker-registry.default.svc:5000/openshift/jboss-datagrid71-openshift                     1.2,1.3,1.0 + 1 more...        3 weeks ago
+jboss-datagrid72-openshift                     docker-registry.default.svc:5000/openshift/jboss-datagrid72-openshift                     1.0,1.1                        3 weeks ago
+jboss-datavirt63-driver-openshift              docker-registry.default.svc:5000/openshift/jboss-datavirt63-driver-openshift              1.0,1.1                        3 weeks ago
+jboss-datavirt63-openshift                     docker-registry.default.svc:5000/openshift/jboss-datavirt63-openshift                     1.4,1.0,1.1 + 2 more...        3 weeks ago
+jboss-decisionserver62-openshift               docker-registry.default.svc:5000/openshift/jboss-decisionserver62-openshift               1.2                            3 weeks ago
+jboss-decisionserver63-openshift               docker-registry.default.svc:5000/openshift/jboss-decisionserver63-openshift               1.3,1.4                        3 weeks ago
+jboss-decisionserver64-openshift               docker-registry.default.svc:5000/openshift/jboss-decisionserver64-openshift               1.0,1.1,1.2 + 1 more...        3 weeks ago
+jboss-eap64-openshift                          docker-registry.default.svc:5000/openshift/jboss-eap64-openshift                          1.5,1.6,1.7 + 6 more...        3 weeks ago
+jboss-eap70-openshift                          docker-registry.default.svc:5000/openshift/jboss-eap70-openshift                          1.5,1.6,1.7 + 2 more...        3 weeks ago
+jboss-eap71-openshift                          docker-registry.default.svc:5000/openshift/jboss-eap71-openshift                          1.1,1.2,1.3 + 1 more...        3 weeks ago
+jboss-fuse70-console                           docker-registry.default.svc:5000/openshift/jboss-fuse70-console                           1.0                            3 weeks ago
+jboss-fuse70-eap-openshift                     docker-registry.default.svc:5000/openshift/jboss-fuse70-eap-openshift                     1.0                            3 weeks ago
+jboss-fuse70-java-openshift                    docker-registry.default.svc:5000/openshift/jboss-fuse70-java-openshift                    1.0                            3 weeks ago
+jboss-fuse70-karaf-openshift                   docker-registry.default.svc:5000/openshift/jboss-fuse70-karaf-openshift                   1.0                            3 weeks ago
+jboss-processserver63-openshift                docker-registry.default.svc:5000/openshift/jboss-processserver63-openshift                1.3,1.4                        3 weeks ago
+jboss-processserver64-openshift                docker-registry.default.svc:5000/openshift/jboss-processserver64-openshift                1.2,1.3,1.0 + 1 more...        3 weeks ago
+jboss-webserver30-tomcat7-openshift            docker-registry.default.svc:5000/openshift/jboss-webserver30-tomcat7-openshift            1.1,1.2,1.3                    3 weeks ago
+jboss-webserver30-tomcat8-openshift            docker-registry.default.svc:5000/openshift/jboss-webserver30-tomcat8-openshift            1.1,1.2,1.3                    3 weeks ago
+jboss-webserver31-tomcat7-openshift            docker-registry.default.svc:5000/openshift/jboss-webserver31-tomcat7-openshift            1.2,1.0,1.1                    3 weeks ago
+jboss-webserver31-tomcat8-openshift            docker-registry.default.svc:5000/openshift/jboss-webserver31-tomcat8-openshift            1.0,1.1,1.2                    3 weeks ago
+jenkins                                        docker-registry.default.svc:5000/openshift/jenkins                                        1,2,latest                     3 weeks ago
+mariadb                                        docker-registry.default.svc:5000/openshift/mariadb                                        10.1,10.2,latest               3 weeks ago
+mongodb                                        docker-registry.default.svc:5000/openshift/mongodb                                        3.6,latest,2.4 + 3 more...     3 weeks ago
+mysql                                          docker-registry.default.svc:5000/openshift/mysql                                          5.5,5.6,5.7 + 1 more...        3 weeks ago
+nginx                                          docker-registry.default.svc:5000/openshift/nginx                                          1.10,1.12,1.8 + 1 more...      3 weeks ago
+nodejs                                         docker-registry.default.svc:5000/openshift/nodejs                                         6,8,8-RHOAR + 4 more...        3 weeks ago
+open-liberty                                   docker-registry.default.svc:5000/openshift/open-liberty                                   19.0.0.9-javaee8               4 weeks ago
+openjdk8-openj9                                docker-registry.default.svc:5000/openshift/openjdk8-openj9                                latest                         3 weeks ago
+perl                                           docker-registry.default.svc:5000/openshift/perl                                           5.24,5.26,latest + 2 more...   3 weeks ago
+php                                            docker-registry.default.svc:5000/openshift/php                                            5.5,5.6,7.0 + 2 more...        3 weeks ago
+postgresql                                     docker-registry.default.svc:5000/openshift/postgresql                                     9.6,latest,10 + 3 more...      3 weeks ago
+python                                         docker-registry.default.svc:5000/openshift/python                                         3.6,latest,2.7 + 3 more...     3 weeks ago
+redhat-openjdk18-openshift                     docker-registry.default.svc:5000/openshift/redhat-openjdk18-openshift                     1.0,1.1,1.2 + 2 more...        3 weeks ago
+redhat-sso70-openshift                         docker-registry.default.svc:5000/openshift/redhat-sso70-openshift                         1.3,1.4                        3 weeks ago
+redhat-sso71-openshift                         docker-registry.default.svc:5000/openshift/redhat-sso71-openshift                         1.1,1.2,1.3 + 1 more...        3 weeks ago
+redhat-sso72-openshift                         docker-registry.default.svc:5000/openshift/redhat-sso72-openshift                         1.0,1.1,1.2                    3 weeks ago
+redis                                          docker-registry.default.svc:5000/openshift/redis                                          3.2,latest                     3 weeks ago
+rhdm70-decisioncentral-openshift               docker-registry.default.svc:5000/openshift/rhdm70-decisioncentral-openshift               1.0,1.1                        3 weeks ago
+rhdm70-kieserver-openshift                     docker-registry.default.svc:5000/openshift/rhdm70-kieserver-openshift                     1.0,1.1                        3 weeks ago
+rhdm73-controller-openshift                    docker-registry.default.svc:5000/openshift/rhdm73-controller-openshift                    1.0
+rhdm73-decisioncentral-indexing-openshift      docker-registry.default.svc:5000/openshift/rhdm73-decisioncentral-indexing-openshift      1.0
+rhdm73-decisioncentral-openshift               docker-registry.default.svc:5000/openshift/rhdm73-decisioncentral-openshift               1.0
+rhdm73-kieserver-openshift                     docker-registry.default.svc:5000/openshift/rhdm73-kieserver-openshift                     1.0
+rhdm73-optaweb-employee-rostering-openshift    docker-registry.default.svc:5000/openshift/rhdm73-optaweb-employee-rostering-openshift    1.0
+rhpam-businesscentral-monitoring-rhel8         docker-registry.default.svc:5000/openshift/rhpam-businesscentral-monitoring-rhel8         7.5.0
+rhpam-businesscentral-rhel8                    docker-registry.default.svc:5000/openshift/rhpam-businesscentral-rhel8                    7.5.0
+rhpam-controller-rhel8                         docker-registry.default.svc:5000/openshift/rhpam-controller-rhel8                         7.5.0
+rhpam-kieserver-rhel8                          docker-registry.default.svc:5000/openshift/rhpam-kieserver-rhel8                          7.5.0
+rhpam-smartrouter-rhel8                        docker-registry.default.svc:5000/openshift/rhpam-smartrouter-rhel8                        7.5.0
+rhpam70-businesscentral-indexing-openshift     docker-registry.default.svc:5000/openshift/rhpam70-businesscentral-indexing-openshift     1.0
+rhpam70-businesscentral-monitoring-openshift   docker-registry.default.svc:5000/openshift/rhpam70-businesscentral-monitoring-openshift   1.0                            3 weeks ago
+rhpam70-businesscentral-openshift              docker-registry.default.svc:5000/openshift/rhpam70-businesscentral-openshift              1.0                            3 weeks ago
+rhpam70-controller-openshift                   docker-registry.default.svc:5000/openshift/rhpam70-controller-openshift                   1.0                            3 weeks ago
+rhpam70-kieserver-openshift                    docker-registry.default.svc:5000/openshift/rhpam70-kieserver-openshift                    1.0                            3 weeks ago
+rhpam70-smartrouter-openshift                  docker-registry.default.svc:5000/openshift/rhpam70-smartrouter-openshift                  1.0                            3 weeks ago
+rhpam73-businesscentral-indexing-openshift     docker-registry.default.svc:5000/openshift/rhpam73-businesscentral-indexing-openshift     1.0
+rhpam73-businesscentral-monitoring-openshift   docker-registry.default.svc:5000/openshift/rhpam73-businesscentral-monitoring-openshift   1.0
+rhpam73-businesscentral-openshift              docker-registry.default.svc:5000/openshift/rhpam73-businesscentral-openshift              1.0
+rhpam73-controller-openshift                   docker-registry.default.svc:5000/openshift/rhpam73-controller-openshift                   1.0
+rhpam73-kieserver-openshift                    docker-registry.default.svc:5000/openshift/rhpam73-kieserver-openshift                    1.0
+rhpam73-smartrouter-openshift                  docker-registry.default.svc:5000/openshift/rhpam73-smartrouter-openshift                  1.0
+ruby                                           docker-registry.default.svc:5000/openshift/ruby                                           2.4,2.5,latest + 3 more...     3 weeks ago
+s2i-open-liberty                               docker-registry.default.svc:5000/openshift/s2i-open-liberty                               latest                         4 weeks ago
+springboot-maven3-centos                       docker-registry.default.svc:5000/openshift/springboot-maven3-centos                       latest                         4 weeks ago
+system-memcached                               docker-registry.default.svc:5000/openshift/system-memcached                               latest,2.6                     3 weeks ago
+system-mysql                                   docker-registry.default.svc:5000/openshift/system-mysql                                   2.6,latest                     3 weeks ago
+system-redis                                   docker-registry.default.svc:5000/openshift/system-redis                                   2.6,latest                     3 weeks ago
+websphere-liberty                              docker-registry.default.svc:5000/openshift/websphere-liberty                              webProfile7-ubi-min-amd64      4 weeks ago
+wildfly                                        docker-registry.default.svc:5000/openshift/wildfly                                        10.1,11.0,12.0 + 5 more...     3 months ago
+zync-database-postgresql                       docker-registry.default.svc:5000/openshift/zync-database-postgresql                       2.6,latest                     3 weeks ago
+
+
+# oc get builds
+
+NAME          TYPE      FROM          STATUS     STARTED             DURATION
+django-ex-1   Source    Git@6702b2b   Complete   42 hours ago        26s
+suman-app-1   Source    Git@d096cc4   Complete   3 hours ago         13s
+suman-app-2   Source    Git@7f2eac0   Complete   About an hour ago   12s
+
+# oc get pods -o wide
+
+NAME                READY     STATUS      RESTARTS   AGE       IP               NODE            NOMINATED NODE
+django-ex-1-build   0/1       Completed   0          1d        172.30.17.210    10.213.46.149   <none>
+django-ex-2-5gk4r   1/1       Running     0          1d        172.30.200.65    10.213.46.152   <none>
+django-ex-2-l9dxt   1/1       Running     0          1d        172.30.208.200   10.213.46.188   <none>
+django-ex-2-qwh8p   1/1       Running     0          1d        172.30.137.151   10.213.46.208   <none>
+suman-app-1-build   0/1       Completed   0          53m       172.30.17.247    10.213.46.149   <none>
+suman-app-1-jmkth   1/1       Running     0          53m       172.30.17.222    10.213.46.149   <none>
+
+# oc describe pods own-app-1-mrp9h  // to see the details of a particular pod
+
+
+Name:               own-app-1-mrp9h
+Namespace:          sumang12-in
+Priority:           0
+PriorityClassName:  <none>
+Node:               10.213.46.149/10.213.46.149
+Start Time:         Thu, 16 Apr 2020 15:15:39 +0530
+Labels:             app=own-app
+                    deployment=own-app-1
+                    deploymentconfig=own-app
+Annotations:        openshift.io/deployment-config.latest-version=1
+                    openshift.io/deployment-config.name=own-app
+                    openshift.io/deployment.name=own-app-1
+                    openshift.io/scc=anyuid
+Status:             Running
+IP:                 172.30.17.249
+Controlled By:      ReplicationController/own-app-1
+Containers:
+  own-app:
+    Container ID:   cri-o://57327d3fdd5eca8e8fae84a84a7ff8c7895b9e127994ce9a5b7f7d728e98a63e
+    Image:          172.21.39.26:5000/sumang12-in/own-app@sha256:eeba9d64c960e17ea4aba8570d207a704a5a35d40eab5fedde3ef8475671c0e5
+    Image ID:       172.21.39.26:5000/sumang12-in/own-app@sha256:eeba9d64c960e17ea4aba8570d207a704a5a35d40eab5fedde3ef8475671c0e5
+    Port:           8080/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Thu, 16 Apr 2020 15:15:41 +0530
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-q7vjl (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  default-token-q7vjl:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-q7vjl
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  node-role.kubernetes.io/compute=true
+Tolerations:     <none>
+Events:          <none>
+
+# oc get svc  // to display services.
+
+NAME            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+django-app      ClusterIP   172.21.156.89    <none>        8080/TCP   4d
+django-ex       ClusterIP   172.21.196.209   <none>        8080/TCP   1d
+go-app          ClusterIP   172.21.121.208   <none>        8080/TCP   8h
+go-app1         ClusterIP   172.21.170.119   <none>        8080/TCP   8h
+my-web-app      ClusterIP   172.21.213.153   <none>        8080/TCP   21h
+mywebapp        ClusterIP   172.21.213.39    <none>        8080/TCP   22h
+openshifttest   ClusterIP   172.21.71.232    <none>        8080/TCP   4h
+own-app         ClusterIP   172.21.160.252   <none>        8080/TCP   4h
+pyapp           ClusterIP   172.21.169.178   <none>        8080/TCP   4d
+suman-app       ClusterIP   172.21.120.145   <none>        8080/TCP   8h
+webapptest      ClusterIP   172.21.179.156   <none>        8080/TCP   4d
+
+# oc describe svc own-app  // to get details for a specific service
+
+Name:              own-app
+Namespace:         sumang12-in
+Labels:            app=own-app
+Annotations:       openshift.io/generated-by=OpenShiftWebConsole
+Selector:          deploymentconfig=own-app
+Type:              ClusterIP
+IP:                172.21.160.252
+Port:              8080-tcp  8080/TCP
+TargetPort:        8080/TCP
+Endpoints:         172.30.17.249:8080
+Session Affinity:  None
+Events:            <none>
+
+# oc get nodes // to see the nodes in the openshift cluster but required admin previlidge to perform the operation
+
+# oc new-app --docker-image=lakshminp/apache:v1 -l method=new-app // here docker image will get pulled from docker hub directly and implemented ,"l" means tagging label to the application
+
+# oc get all -l method=new-app  // to get all information regarding the "new-app" deployed along with label name
+
+
+# oc status --suggest
+
+In project sumang12-in on server https://c100-e.us-east.containers.cloud.ibm.com:30528
+
+http://django-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/django-app)
+
+https://django-ex-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/django-ex)
+  dc/django-ex deploys istag/django-ex:latest <-
+    bc/django-ex source builds https://github.com/openshift/django-ex.git#master on openshift/python:3.6
+    deployment #2 deployed 47 hours ago - 3 pods
+    deployment #1 deployed 2 days ago
+
+http://go-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/go-app)
+
+svc/go-app1 - 172.21.170.119:8080
+
+http://my-web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/my-web-app)
+
+http://mywebapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/mywebapp)
+
+https://openshifttest-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/openshifttest)
+  dc/openshifttest deploys istag/openshifttest:latest <-
+    bc/openshifttest source builds https://github.com/esughos/openshift_test.git on openshift/python:3.6
+    deployment #1 deployed 5 hours ago - 1 pod
+
+https://own-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/own-app)
+  dc/own-app deploys istag/own-app:latest <-
+    bc/own-app source builds https://github.com/esughos/openshift_test.git#master on openshift/python:3.6
+    deployment #1 deployed 5 hours ago - 1 pod
+
+http://pyapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/pyapp)
+
+https://suman-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/suman-app)
+  dc/suman-app deploys istag/suman-app:latest <-
+    bc/suman-app source builds https://github.com/esughos/openshift.git#master on openshift/python:3.6
+    deployment #2 deployed 7 hours ago - 1 pod
+    deployment #1 deployed 9 hours ago
+
+http://webapptest-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud to pod port 8080-tcp (svc/webapptest)
+
+Warnings:
+  * route/fluskapp is supposed to route traffic to svc/fluskapp but svc/fluskapp doesn't exist.
+  * route/py-web-app is supposed to route traffic to svc/py-web-app but svc/py-web-app doesn't exist.
+  * route/python-hello-world is supposed to route traffic to svc/python-hello-world but svc/python-hello-world doesn't exist.
+  * route/python-web-app is supposed to route traffic to svc/python-web-app but svc/python-web-app doesn't exist.
+  * route/web-app is supposed to route traffic to svc/web-app but svc/web-app doesn't exist.
+  * route/webapp is supposed to route traffic to svc/webapp but svc/webapp doesn't exist.
+
+Info:
+  * dc/openshifttest has no readiness probe to verify pods are ready to accept traffic or ensure deployment is successful.
+    try: oc set probe dc/openshifttest --readiness ...
+  * dc/openshifttest has no liveness probe to verify pods are still running.
+    try: oc set probe dc/openshifttest --liveness ...
+  * dc/own-app has no readiness probe to verify pods are ready to accept traffic or ensure deployment is successful.
+    try: oc set probe dc/own-app --readiness ...
+  * dc/own-app has no liveness probe to verify pods are still running.
+    try: oc set probe dc/own-app --liveness ...
+  * dc/suman-app has no readiness probe to verify pods are ready to accept traffic or ensure deployment is successful.
+    try: oc set probe dc/suman-app --readiness ...
+  * dc/suman-app has no liveness probe to verify pods are still running.
+    try: oc set probe dc/suman-app --liveness ...
+
+View details with 'oc describe <resource>/<name>' or list everything with 'oc get all'.
+
+# oc get all
+NAME                        READY     STATUS      RESTARTS   AGE
+pod/django-ex-1-build       0/1       Completed   0          1d
+pod/django-ex-2-5gk4r       1/1       Running     0          1d
+pod/django-ex-2-l9dxt       1/1       Running     0          1d
+pod/django-ex-2-qwh8p       1/1       Running     0          1d
+pod/openshifttest-1-build   0/1       Completed   0          5h
+pod/openshifttest-1-d572d   1/1       Running     0          5h
+pod/own-app-1-build         0/1       Completed   0          5h
+pod/own-app-1-mrp9h         1/1       Running     0          5h
+pod/suman-app-1-build       0/1       Completed   0          8h
+pod/suman-app-2-bmz7t       1/1       Running     0          6h
+pod/suman-app-2-build       0/1       Completed   0          6h
+
+NAME                                    DESIRED   CURRENT   READY     AGE
+replicationcontroller/django-ex-1       0         0         0         1d
+replicationcontroller/django-ex-2       3         3         3         1d
+replicationcontroller/openshifttest-1   1         1         1         5h
+replicationcontroller/own-app-1         1         1         1         5h
+replicationcontroller/suman-app-1       0         0         0         8h
+replicationcontroller/suman-app-2       1         1         1         6h
+
+NAME                    TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/django-app      ClusterIP   172.21.156.89    <none>        8080/TCP   4d
+service/django-ex       ClusterIP   172.21.196.209   <none>        8080/TCP   1d
+service/go-app          ClusterIP   172.21.121.208   <none>        8080/TCP   8h
+service/go-app1         ClusterIP   172.21.170.119   <none>        8080/TCP   8h
+service/my-web-app      ClusterIP   172.21.213.153   <none>        8080/TCP   21h
+service/mywebapp        ClusterIP   172.21.213.39    <none>        8080/TCP   22h
+service/openshifttest   ClusterIP   172.21.71.232    <none>        8080/TCP   5h
+service/own-app         ClusterIP   172.21.160.252   <none>        8080/TCP   5h
+service/pyapp           ClusterIP   172.21.169.178   <none>        8080/TCP   4d
+service/suman-app       ClusterIP   172.21.120.145   <none>        8080/TCP   8h
+service/webapptest      ClusterIP   172.21.179.156   <none>        8080/TCP   4d
+
+NAME                                               REVISION   DESIRED   CURRENT   TRIGGERED BY
+deploymentconfig.apps.openshift.io/django-ex       2          3         3         config,image(django-ex:latest)
+deploymentconfig.apps.openshift.io/openshifttest   1          1         1         config,image(openshifttest:latest)
+deploymentconfig.apps.openshift.io/own-app         1          1         1         config,image(own-app:latest)
+deploymentconfig.apps.openshift.io/suman-app       2          1         1         config,image(suman-app:latest)
+
+NAME                                           TYPE      FROM         LATEST
+buildconfig.build.openshift.io/django-ex       Source    Git@master   1
+buildconfig.build.openshift.io/openshifttest   Source    Git          1
+buildconfig.build.openshift.io/own-app         Source    Git@master   1
+buildconfig.build.openshift.io/suman-app       Source    Git@master   2
+
+NAME                                       TYPE      FROM          STATUS     STARTED       DURATION
+build.build.openshift.io/django-ex-1       Source    Git@6702b2b   Complete   2 days ago    26s
+build.build.openshift.io/suman-app-1       Source    Git@d096cc4   Complete   9 hours ago   13s
+build.build.openshift.io/suman-app-2       Source    Git@7f2eac0   Complete   7 hours ago   12s
+build.build.openshift.io/own-app-1         Source    Git@6569131   Complete   5 hours ago   13s
+build.build.openshift.io/openshifttest-1   Source    Git@6569131   Complete   5 hours ago   12s
+
+NAME                                           DOCKER REPO                                                  TAGS      UPDATED
+imagestream.image.openshift.io/django-ex       docker-registry.default.svc:5000/sumang12-in/django-ex       latest    2 days ago
+imagestream.image.openshift.io/openshifttest   docker-registry.default.svc:5000/sumang12-in/openshifttest   latest    5 hours ago
+imagestream.image.openshift.io/own-app         docker-registry.default.svc:5000/sumang12-in/own-app         latest    5 hours ago
+imagestream.image.openshift.io/suman-app       docker-registry.default.svc:5000/sumang12-in/suman-app       latest    7 hours ago
+imagestream.image.openshift.io/ubuntu          docker-registry.default.svc:5000/sumang12-in/ubuntu          16.04     9 hours ago
+
+NAME                                          HOST/PORT                                                                                                                         PATH      SERVICES             PORT       TERMINATION   WILDCARD
+route.route.openshift.io/django-app           django-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                     django-app           8080-tcp                 None
+route.route.openshift.io/django-ex            django-ex-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                      django-ex            8080-tcp   edge          None
+route.route.openshift.io/fluskapp             fluskapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                       fluskapp             8080-tcp                 None
+route.route.openshift.io/go-app               go-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                         go-app               8080-tcp                 None
+route.route.openshift.io/my-web-app           my-web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                     my-web-app           8080-tcp                 None
+route.route.openshift.io/mywebapp             mywebapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                       mywebapp             8080-tcp                 None
+route.route.openshift.io/openshifttest        openshifttest-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                  openshifttest        8080-tcp   edge          None
+route.route.openshift.io/own-app              own-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                        own-app              8080-tcp   edge          None
+route.route.openshift.io/py-web-app           py-web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                     py-web-app           8080-tcp                 None
+route.route.openshift.io/pyapp                pyapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                          pyapp                8080-tcp                 None
+route.route.openshift.io/python-hello-world   python-hello-world-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud             python-hello-world   8080-tcp                 None
+route.route.openshift.io/python-web-app       python-web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                 python-web-app       8080-tcp                 None
+route.route.openshift.io/suman-app            suman-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                      suman-app            8080-tcp   edge          None
+route.route.openshift.io/web-app              web-app-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                        web-app              8080-tcp                 None
+route.route.openshift.io/webapp               webapp-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                         webapp               8080-tcp                 None
+route.route.openshift.io/webapptest           webapptest-sumang12-in.osc-sbx-exp-ap-15768375-f72ef11f3ab089a8c677044eb28292cd-0001.us-east.containers.appdomain.cloud                     webapptest           8080-tcp                 None
+Error from server (Forbidden): podautoscalers.autoscaling.internal.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list podautoscalers.autoscaling.internal.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): images.caching.internal.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list images.caching.internal.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): extensions.dashboard.tekton.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list extensions.dashboard.tekton.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): eventtypes.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list eventtypes.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): brokers.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list brokers.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): channels.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list channels.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): clusterchannelprovisioners.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list clusterchannelprovisioners.eventing.knative.dev at the cluster scope: no RBAC policy matched
+Error from server (Forbidden): triggers.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list triggers.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): subscriptions.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list subscriptions.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): clusteringresses.networking.internal.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list clusteringresses.networking.internal.knative.dev at the cluster scope: no RBAC policy matched
+Error from server (Forbidden): certificates.networking.internal.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list certificates.networking.internal.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): serverlessservices.networking.internal.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list serverlessservices.networking.internal.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): services.serving.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list services.serving.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): configurations.serving.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list configurations.serving.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): routes.serving.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list routes.serving.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): revisions.serving.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list revisions.serving.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): githubsources.sources.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list githubsources.sources.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): cronjobsources.sources.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list cronjobsources.sources.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): containersources.sources.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list containersources.sources.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): apiserversources.sources.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list apiserversources.sources.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
+Error from server (Forbidden): clustertasks.tekton.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list clustertasks.tekton.dev at the cluster scope: no RBAC policy matched
+
+#  oc get dc,rc,pods  // dc means deployment-config and rc means replication-config
+NAME                                               REVISION   DESIRED   CURRENT   TRIGGERED BY
+deploymentconfig.apps.openshift.io/django-ex       2          3         3         config,image(django-ex:latest)
+deploymentconfig.apps.openshift.io/openshifttest   1          1         1         config,image(openshifttest:latest)
+deploymentconfig.apps.openshift.io/own-app         1          1         1         config,image(own-app:latest)
+deploymentconfig.apps.openshift.io/suman-app       2          1         1         config,image(suman-app:latest)
+
+NAME                                    DESIRED   CURRENT   READY     AGE
+replicationcontroller/django-ex-1       0         0         0         2d
+replicationcontroller/django-ex-2       3         3         3         1d
+replicationcontroller/openshifttest-1   1         1         1         5h
+replicationcontroller/own-app-1         1         1         1         5h
+replicationcontroller/suman-app-1       0         0         0         9h
+replicationcontroller/suman-app-2       1         1         1         7h
+
+NAME                        READY     STATUS      RESTARTS   AGE
+pod/django-ex-1-build       0/1       Completed   0          2d
+pod/django-ex-2-5gk4r       1/1       Running     0          1d
+pod/django-ex-2-l9dxt       1/1       Running     0          1d
+pod/django-ex-2-qwh8p       1/1       Running     0          1d
+pod/openshifttest-1-build   0/1       Completed   0          5h
+pod/openshifttest-1-d572d   1/1       Running     0          5h
+pod/own-app-1-build         0/1       Completed   0          5h
+pod/own-app-1-mrp9h         1/1       Running     0          5h
+pod/suman-app-1-build       0/1       Completed   0          9h
+pod/suman-app-2-bmz7t       1/1       Running     0          7h
+pod/suman-app-2-build       0/1       Completed   0          7h
+
+#  oc rollout status dc/openshifttest
+
+
+
+
+              
