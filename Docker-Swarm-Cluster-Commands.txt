@@ -42,8 +42,12 @@ Once the docker swarm setup is finished and the machines are ready for the clust
 
 # docker service rm <task-id> // Remove the task from the cluster. To see the task-id provide docker service ls or, docker service ps
 
-# docker service create --replicas 2 --name nginx nginx
+# docker service create --replicas 2 --name nginx nginx // command to create a service with replicas
+
+# docker service update --replicas 3 --name nginx nginx // command to update a existing service for replicas i.e. from 2 to 3
 
 # docker node update --availability drain <docker-master-host-name>  // if we want to drain the services from any master node we can do with the following command. The service which was runnning in the particular Master-Node will get shifted to the other worker nodes.
 
-# 
+# docker network create --driver overlay --subnet <subnet-ip/CIDR> my-overlay-network  // command to create overlay network in Swarm Cluster
+
+# docker service create --replicas 2 --network my-overlay-network nginx  // command to utilize Overlay-Network and apply the overlay network for nginx service
