@@ -27,6 +27,7 @@ Each project in openshift within each other communicate with OVS Multitenant wit
 
 Now to communicate to the external world service works with route to expose application to external users. Now, route can be attched with "LoadBalancer" to serve this purpose. There are three load balancer present "Source" which has a direct relationship with the "Pod" and the "External users" i.e. it acts as a sticky session, "RoundRobin" routes traffic randomly based on the load of the host and "leastconn" routes towards endpoints with lowest number of connections.
 
+In openshift rollingupdate strategy is the best process to update app for new deployment as it'll bring down one by one app and create a new one while recreate strategy will make the whole cluster app down and then will bring the new app version in the cluster hence recreate strategy will have an outage. There is another option called custom strategy.
 
 ############# Openshift CLI commands ####################
 
@@ -548,7 +549,8 @@ Error from server (Forbidden): containersources.sources.eventing.knative.dev is 
 Error from server (Forbidden): apiserversources.sources.eventing.knative.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list apiserversources.sources.eventing.knative.dev in the namespace "sumang12-in": no RBAC policy matched
 Error from server (Forbidden): clustertasks.tekton.dev is forbidden: User "IAM#sumang12@in.ibm.com" cannot list clustertasks.tekton.dev at the cluster scope: no RBAC policy matched
 
-#  oc get dc,rc,pods  // dc means deployment-config and rc means replication-config
+#  oc get dc,rc,pods  // dc means deployment-config and rc means replication-controler
+
 NAME                                               REVISION   DESIRED   CURRENT   TRIGGERED BY
 deploymentconfig.apps.openshift.io/django-ex       2          3         3         config,image(django-ex:latest)
 deploymentconfig.apps.openshift.io/openshifttest   1          1         1         config,image(openshifttest:latest)
@@ -576,7 +578,11 @@ pod/suman-app-1-build       0/1       Completed   0          9h
 pod/suman-app-2-bmz7t       1/1       Running     0          7h
 pod/suman-app-2-build       0/1       Completed   0          7h
 
-#  oc rollout status dc/openshifttest
+# oc rollout status dc/openshifttest   //"dc" means deployment-config
+
+# oc get pods --show-labels
+
+# oc describe rc frontend // here "rc" means replication-controller and "frontend" is the label of the deployment
 
 
 
